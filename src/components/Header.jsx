@@ -1,8 +1,18 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { User, ChevronDown } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { User, ChevronDown, Search, MapPin, Clock } from 'lucide-react';
 
 const Header = () => {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [location, setLocation] = useState('Toronto, Ontario, Canada');
+  const [timeOfDay, setTimeOfDay] = useState('October 4, Afternoon');
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    navigate(`/search?q=${encodeURIComponent(searchQuery)}&location=${encodeURIComponent(location)}&time=${encodeURIComponent(timeOfDay)}`);
+  };
+
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -36,6 +46,61 @@ const Header = () => {
               <ChevronDown className="w-4 h-4" />
             </button>
           </div>
+        </div>
+        
+        {/* Search Bar */}
+        <div className="pb-4">
+          <form onSubmit={handleSearch} className="flex items-center gap-3">
+            {/* Search Input */}
+            <div className="flex-1 relative">
+              <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <Search className="w-5 h-5" />
+              </div>
+              <input
+                type="text"
+                placeholder="Massage therapy"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+              />
+            </div>
+            
+            {/* Location Input */}
+            <div className="flex-1 relative">
+              <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <MapPin className="w-5 h-5" />
+              </div>
+              <input
+                type="text"
+                placeholder="Location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+              />
+            </div>
+            
+            {/* Time Input */}
+            <div className="flex-1 relative">
+              <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <Clock className="w-5 h-5" />
+              </div>
+              <input
+                type="text"
+                placeholder="Time"
+                value={timeOfDay}
+                onChange={(e) => setTimeOfDay(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+              />
+            </div>
+            
+            {/* Search Button */}
+            <button
+              type="submit"
+              className="px-8 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+            >
+              SEARCH
+            </button>
+          </form>
         </div>
       </div>
     </header>
