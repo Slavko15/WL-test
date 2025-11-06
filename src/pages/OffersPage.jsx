@@ -1,136 +1,212 @@
 import React, { useState } from 'react';
-import { Search, SlidersHorizontal, Tag } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { ChevronDown } from 'lucide-react';
+import FilterBar from '../components/FilterBar';
 import OfferCard from '../components/OfferCard';
-import { offers } from '../data/mockData';
+import MapView from '../components/MapView';
+import { offers, businesses } from '../data/mockData';
 
 const OffersPage = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('featured');
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [showMap, setShowMap] = useState(true);
+  const [hoveredOffer, setHoveredOffer] = useState(null);
+  const [activeTab, setActiveTab] = useState('OFFERS');
+  const [sortBy, setSortBy] = useState('Distance');
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({
+    activity: [],
+    amenities: [],
+    distance: [],
+    gender: [],
+    price: [],
+  });
   
-  // Filter and sort offers
-  const filteredOffers = offers
-    .filter(offer => {
-      if (!searchQuery) return true;
-      return offer.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-             offer.businessName.toLowerCase().includes(searchQuery.toLowerCase());
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case 'price-low':
-          return a.price - b.price;
-        case 'price-high':
-          return b.price - a.price;
-        case 'discount':
-          const discountA = ((a.originalPrice - a.price) / a.originalPrice) * 100;
-          const discountB = ((b.originalPrice - b.price) / b.originalPrice) * 100;
-          return discountB - discountA;
-        default: // featured
-          return b.topChoice - a.topChoice;
-      }
-    });
+  const query = searchParams.get('q') || 'Massage therapy';
+  const location = searchParams.get('location') || 'Toronto';
+  const time = searchParams.get('time') || 'Tuesday, October 4';
+  
+  // Filter offers based on search and filters
+  const filteredOffers = offers.filter(offer => {
+    // Search query filter
+    if (query && !offer.title.toLowerCase().includes(query.toLowerCase()) &&
+        !offer.businessName.toLowerCase().includes(query.toLowerCase())) {
+      return false;
+    }
+    
+    // Activity type filter - you can enhance this based on your needs
+    if (activeFilters.activity.length > 0) {
+      // This would need to be mapped to offer types
+      return true;
+    }
+    
+    return true;
+  });
+  
+  // Sort offers
+  const sortedOffers = [...filteredOffers].sort((a, b) => {
+    switch (sortBy) {
+      case 'Distance':
+        return parseFloat(a.distance) - parseFloat(b.distance);
+      case 'Rating':
+        return b.rating - a.rating;
+      case 'Price':
+        return a.price - b.price;
+      default:
+        return 0;
+    }
+  });
+  
+  // Map offers to businesses for map view
+  const offersWithLocations = sortedOffers.map(offer => {
+    const business = businesses.find(b => b.id === offer.businessId);
+    return {
+      ...offer,
+      lat: business?.lat || 43.6532,
+      lng: business?.lng || -79.3832,
+    };
+  });
   
   return (
     <div className="bg-gray-50 min-h-screen">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center">
-            <Tag className="w-12 h-12 mx-auto mb-4" />
-            <h1 className="text-4xl font-bold mb-4">Special Offers & Packages</h1>
-            <p className="text-xl text-primary-100 max-w-2xl mx-auto">
-              Discover exclusive deals on wellness services near you
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      {/* Search and Filters */}
-      <div className="bg-white border-b border-gray-200 sticky top-16 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            {/* Search */}
-            <div className="flex-grow relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search offers..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
-            </div>
-            
-            {/* Sort */}
-            <div className="flex gap-3">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent cursor-pointer"
+      {/* Tabs */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-6">
+            {['SERVICES', 'LOCATIONS', 'OFFERS'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => {
+                  setActiveTab(tab);
+                  if (tab === 'SERVICES' || tab === 'LOCATIONS') {
+                    navigate(`/search?q=${encodeURIComponent(query)}&location=${encodeURIComponent(location)}&time=${encodeURIComponent(time)}`);
+                  }
+                }}
+                className={`px-4 py-4 text-sm font-semibold border-b-2 transition-colors ${
+                  activeTab === tab
+                    ? 'border-gray-900 text-gray-900'
+                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                }`}
               >
-                <option value="featured">Featured</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="discount">Highest Discount</option>
-              </select>
-              
-              <button className="flex items-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                <SlidersHorizontal className="w-5 h-5" />
-                <span className="hidden sm:inline">Filters</span>
+                {tab}
               </button>
-            </div>
-          </div>
-          
-          {/* Results count */}
-          <div className="mt-4">
-            <p className="text-gray-600">
-              {filteredOffers.length} offer{filteredOffers.length !== 1 ? 's' : ''} available
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      {/* Offers Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {filteredOffers.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredOffers.map((offer) => (
-              <OfferCard key={offer.id} offer={offer} />
             ))}
           </div>
-        ) : (
-          <div className="card p-12 text-center">
-            <div className="text-gray-400 mb-4">
-              <Tag className="w-16 h-16 mx-auto" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No offers found</h3>
-            <p className="text-gray-600 mb-4">Try adjusting your search terms</p>
-            <button
-              onClick={() => setSearchQuery('')}
-              className="btn-primary"
-            >
-              Clear Search
-            </button>
-          </div>
-        )}
+        </div>
       </div>
       
-      {/* Info Section */}
-      <div className="bg-white border-t border-gray-200 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+      {/* Filter Bar */}
+      <FilterBar
+        activeFilters={activeFilters}
+        onFilterChange={setActiveFilters}
+        onClearFilters={() => setActiveFilters({ activity: [], amenities: [], distance: [], gender: [], price: [] })}
+      />
+      
+      {/* Search Info & Controls */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-gray-900 mb-2">Best Price Guarantee</h3>
-              <p className="text-sm text-gray-600">Find a better price? We'll match it.</p>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {query} in {location} – {time}
+              </h1>
             </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">Easy Booking</h3>
-              <p className="text-sm text-gray-600">Book instantly and manage on the go.</p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">Flexible Packages</h3>
-              <p className="text-sm text-gray-600">Use at your own pace with extended validity.</p>
+            
+            <div className="flex items-center gap-4">
+              {/* Sort Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowSortDropdown(!showSortDropdown)}
+                  className="flex items-center gap-2 text-sm font-medium text-gray-700"
+                >
+                  Sort by: {sortBy}
+                  <ChevronDown className={`w-4 h-4 transition-transform ${showSortDropdown ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {showSortDropdown && (
+                  <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 p-2 z-50">
+                    {['Distance', 'Rating', 'Price'].map((option) => (
+                      <button
+                        key={option}
+                        onClick={() => {
+                          setSortBy(option);
+                          setShowSortDropdown(false);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded"
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              {/* Map Toggle */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700">Show map</span>
+                <button
+                  onClick={() => setShowMap(!showMap)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    showMap ? 'bg-gray-900' : 'bg-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      showMap ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
             </div>
           </div>
+        </div>
+      </div>
+      
+      {/* Results Container */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className={`flex gap-6 ${showMap ? '' : ''}`}>
+          {/* Offers List */}
+          <div className={`space-y-4 ${showMap ? 'flex-1' : 'w-full'}`}>
+            {sortedOffers.length > 0 ? (
+              sortedOffers.map((offer) => (
+                <OfferCard
+                  key={offer.id}
+                  offer={offer}
+                  onHover={setHoveredOffer}
+                  onLeave={() => setHoveredOffer(null)}
+                />
+              ))
+            ) : (
+              <div className="card p-12 text-center">
+                <div className="text-gray-400 mb-4">
+                  <svg className="w-16 h-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No offers found</h3>
+                <p className="text-gray-600 mb-4">Try adjusting your filters or search terms</p>
+                <button
+                  onClick={() => setActiveFilters({ activity: [], amenities: [], distance: [], gender: [], price: [] })}
+                  className="btn-primary"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            )}
+          </div>
+          
+          {/* Map View */}
+          {showMap && (
+            <div className="hidden lg:block w-[600px] sticky top-32 h-[calc(100vh-200px)]">
+              <MapView
+                businesses={offersWithLocations}
+                hoveredBusiness={hoveredOffer}
+                onBusinessClick={(offer) => {
+                  // Handle offer click
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

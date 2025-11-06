@@ -76,7 +76,12 @@ const SearchResultsPage = () => {
             {['SERVICES', 'LOCATIONS', 'OFFERS'].map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => {
+                  setActiveTab(tab);
+                  if (tab === 'OFFERS') {
+                    navigate(`/offers?q=${encodeURIComponent(query)}&location=${encodeURIComponent(location)}&time=${encodeURIComponent(time)}`);
+                  }
+                }}
                 className={`px-4 py-4 text-sm font-semibold border-b-2 transition-colors ${
                   activeTab === tab
                     ? 'border-gray-900 text-gray-900'
