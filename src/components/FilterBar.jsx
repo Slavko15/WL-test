@@ -28,25 +28,27 @@ const FilterBar = ({ activeFilters, onFilterChange, onClearFilters }) => {
   
   const hasActiveFilters = Object.values(activeFilters).some(arr => arr.length > 0);
   
+  const distanceOptions = ['5 kilometers', '10 kilometers', '25 kilometers', '50 kilometers'];
+  const genderOptions = ['Any', 'Male', 'Female', 'Non-binary'];
+  const priceRanges = ['$', '$$', '$$$', '$$$$'];
+  
   return (
     <div className="bg-white border-b border-gray-200 sticky top-16 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Quick Filters */}
         <div className="flex items-center gap-3 mb-3 overflow-x-auto pb-2">
-          <button
-            onClick={() => setShowAllFilters(!showAllFilters)}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium text-sm whitespace-nowrap transition-colors"
-          >
-            <SlidersHorizontal className="w-4 h-4" />
-            All Filters
-          </button>
-          
+          {/* Activity Type Dropdown */}
           <div className="relative">
             <button
               onClick={() => setExpandedFilter(expandedFilter === 'activity' ? null : 'activity')}
               className="flex items-center gap-2 px-4 py-2 border border-gray-300 hover:border-gray-400 rounded-lg font-medium text-sm whitespace-nowrap transition-colors"
             >
-              Activity Type
+              Activity type
+              {(activeFilters.activity?.length || 0) > 0 && (
+                <span className="ml-1 px-2 py-0.5 bg-primary-600 text-white rounded-full text-xs">
+                  {activeFilters.activity.length}
+                </span>
+              )}
               <ChevronDown className={`w-4 h-4 transition-transform ${expandedFilter === 'activity' ? 'rotate-180' : ''}`} />
             </button>
             
@@ -69,24 +71,145 @@ const FilterBar = ({ activeFilters, onFilterChange, onClearFilters }) => {
             )}
           </div>
           
-          <button className="px-4 py-2 border border-gray-300 hover:border-gray-400 rounded-lg font-medium text-sm whitespace-nowrap transition-colors">
-            Distance
-          </button>
+          {/* Amenities Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setExpandedFilter(expandedFilter === 'amenities' ? null : 'amenities')}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 hover:border-gray-400 rounded-lg font-medium text-sm whitespace-nowrap transition-colors"
+            >
+              Amenities
+              {(activeFilters.amenities?.length || 0) > 0 && (
+                <span className="ml-1 px-2 py-0.5 bg-primary-600 text-white rounded-full text-xs">
+                  {activeFilters.amenities.length}
+                </span>
+              )}
+              <ChevronDown className={`w-4 h-4 transition-transform ${expandedFilter === 'amenities' ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {expandedFilter === 'amenities' && (
+              <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 p-4 z-50 max-h-96 overflow-y-auto">
+                <div className="space-y-2">
+                  {amenities.map((amenity) => (
+                    <label key={amenity} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                      <input
+                        type="checkbox"
+                        checked={(activeFilters.amenities || []).includes(amenity)}
+                        onChange={() => toggleFilter('amenities', amenity)}
+                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                      />
+                      <span className="text-sm">{amenity}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           
-          <button className="px-4 py-2 border border-gray-300 hover:border-gray-400 rounded-lg font-medium text-sm whitespace-nowrap transition-colors">
-            Price Range
-          </button>
+          {/* Distance Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setExpandedFilter(expandedFilter === 'distance' ? null : 'distance')}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 hover:border-gray-400 rounded-lg font-medium text-sm whitespace-nowrap transition-colors"
+            >
+              Distance
+              <ChevronDown className={`w-4 h-4 transition-transform ${expandedFilter === 'distance' ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {expandedFilter === 'distance' && (
+              <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 p-2 z-50">
+                <div className="space-y-1">
+                  {distanceOptions.map((distance) => (
+                    <button
+                      key={distance}
+                      onClick={() => {
+                        onFilterChange({ ...activeFilters, distance: [distance] });
+                        setExpandedFilter(null);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded"
+                    >
+                      {distance}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           
-          <button className="px-4 py-2 border border-gray-300 hover:border-gray-400 rounded-lg font-medium text-sm whitespace-nowrap transition-colors">
-            Amenities
+          {/* Provider Gender Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setExpandedFilter(expandedFilter === 'gender' ? null : 'gender')}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 hover:border-gray-400 rounded-lg font-medium text-sm whitespace-nowrap transition-colors"
+            >
+              Provider gender
+              <ChevronDown className={`w-4 h-4 transition-transform ${expandedFilter === 'gender' ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {expandedFilter === 'gender' && (
+              <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 p-2 z-50">
+                <div className="space-y-1">
+                  {genderOptions.map((gender) => (
+                    <button
+                      key={gender}
+                      onClick={() => {
+                        onFilterChange({ ...activeFilters, gender: [gender] });
+                        setExpandedFilter(null);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded"
+                    >
+                      {gender}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Price Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setExpandedFilter(expandedFilter === 'price' ? null : 'price')}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 hover:border-gray-400 rounded-lg font-medium text-sm whitespace-nowrap transition-colors"
+            >
+              Price
+              <ChevronDown className={`w-4 h-4 transition-transform ${expandedFilter === 'price' ? 'rotate-180' : ''}`} />
+            </button>
+            
+            {expandedFilter === 'price' && (
+              <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 p-2 z-50">
+                <div className="space-y-1">
+                  {priceRanges.map((priceRange) => (
+                    <button
+                      key={priceRange}
+                      onClick={() => {
+                        onFilterChange({ ...activeFilters, price: [priceRange] });
+                        setExpandedFilter(null);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded"
+                    >
+                      {priceRange}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* All Filters Button */}
+          <button
+            onClick={() => setShowAllFilters(!showAllFilters)}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 hover:border-gray-400 rounded-lg font-medium text-sm whitespace-nowrap transition-colors"
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+            All filters
           </button>
           
           {hasActiveFilters && (
             <button
               onClick={onClearFilters}
-              className="px-4 py-2 text-primary-600 hover:text-primary-700 font-medium text-sm whitespace-nowrap"
+              className="px-4 py-2 text-gray-700 hover:text-primary-600 font-medium text-sm whitespace-nowrap underline"
             >
-              Clear All
+              Clear all
             </button>
           )}
         </div>
@@ -96,13 +219,13 @@ const FilterBar = ({ activeFilters, onFilterChange, onClearFilters }) => {
           <div className="flex flex-wrap gap-2">
             {Object.entries(activeFilters).map(([category, values]) =>
               values.map((value) => (
-                <span key={`${category}-${value}`} className="chip">
+                <span key={`${category}-${value}`} className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-800 rounded-full text-sm font-medium">
                   {value}
                   <button
                     onClick={() => removeFilter(category, value)}
-                    className="hover:bg-primary-200 rounded-full p-0.5 transition-colors"
+                    className="hover:bg-gray-200 rounded-full p-0.5 transition-colors"
                   >
-                    <X className="w-3 h-3" />
+                    <X className="w-3.5 h-3.5" />
                   </button>
                 </span>
               ))
